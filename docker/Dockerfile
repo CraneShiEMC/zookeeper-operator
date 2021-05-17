@@ -19,6 +19,10 @@ FROM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}zookeeper:3.6.1
 COPY bin /usr/local/bin
 RUN chmod +x /usr/local/bin/*
 COPY --from=0 /zu/build/libs/zu.jar /root/
-
+RUN chmod +x -R /docker-entrypoint.sh
+RUN chgrp -R 0 /apache-zookeeper-3.6.1-bin && \
+    chmod -R g=u /apache-zookeeper-3.6.1-bin
+RUN chgrp -R 0 /root && \
+    chmod -R g=u /root
 RUN apt-get -q update && \
     apt-get install -y dnsutils curl procps
