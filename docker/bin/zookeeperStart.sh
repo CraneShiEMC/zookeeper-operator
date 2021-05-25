@@ -148,7 +148,7 @@ else
   echo Copying the /conf/zoo.cfg contents except the dynamic config file during restart
   echo -e "$( head -n -1 /conf/zoo.cfg )""\n""$( tail -n 1 "$STATIC_CONFIG" )" > $STATIC_CONFIG
 fi
-cp -f /conf/log4j.properties $ZOOCFGDIR
+cp -f /apache-zookeeper-3.6.1-bin/conf/log4j.properties $ZOOCFGDIR
 cp -f /conf/log4j-quiet.properties $ZOOCFGDIR
 cp -f /conf/env.sh $ZOOCFGDIR
 

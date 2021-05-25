@@ -18,7 +18,11 @@ RUN ./gradlew --console=verbose --info shadowJar
 FROM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}zookeeper:3.6.1
 COPY bin /usr/local/bin
 RUN chmod +x /usr/local/bin/*
+COPY log4j.properties /apache-zookeeper-3.6.1-bin/conf/log4j.properties
 COPY --from=0 /zu/build/libs/zu.jar /root/
+ENV ZOO_LOG_DIR=/opt/zookeeper/logs
+ENV ZOO_LOG_FILE=zookeeper.log
+ENV ZOO_LOG4J_PROP=INFO,ROLLINGFILE
 
 RUN apt-get -q update && \
     apt-get install -y dnsutils curl procps
