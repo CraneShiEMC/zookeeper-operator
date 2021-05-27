@@ -19,6 +19,8 @@ FROM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}zookeeper:3.6.1
 COPY bin /usr/local/bin
 RUN chmod +x /usr/local/bin/*
 COPY log4j.properties /apache-zookeeper-3.6.1-bin/conf/log4j.properties
+COPY zk-sp.sh /zk-sp.sh
+RUN chmod +x /bk-sp.sh
 COPY --from=0 /zu/build/libs/zu.jar /root/
 RUN chmod +x -R /docker-entrypoint.sh
 RUN chgrp -R 0 /apache-zookeeper-3.6.1-bin && \
