@@ -13,7 +13,7 @@ EOF
 }
 
 precheck() {
-  echo "zookeeper precheck called at " $(date) >>  ${LOG_RECEOVER_PATH}
+  echo "zookeeper precheck called at " $(date) >>  ${LOG_RECOVER_PATH}
   if grep -q "Peer state changed" ${LOG_PATH}
   then
     echo "zookeeper has ongoing sync task" >>  ${LOG_RECOVER_PATH}
