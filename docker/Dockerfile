@@ -28,7 +28,7 @@ RUN chgrp -R 0 /apache-zookeeper-3.6.1-bin && \
 RUN chgrp -R 0 /root && \
     chmod -R g=u /root
 ENV ZOO_LOG_DIR=/opt/zookeeper/logs
-ENV ZOO_LOG4J_PROP=INFO,ROLLINGFILE
+ENV ZOO_LOG4J_PROP=DEBUG,ROLLINGFILE
 RUN sed -i 's/ZOO_LOG_FILE=.*/ZOO_LOG_FILE=zookeeper.log/' /apache-zookeeper-3.6.1-bin/bin/zkServer.sh
 RUN apt-get -q update && \
     apt-get install -y dnsutils curl procps
