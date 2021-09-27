@@ -15,9 +15,9 @@ RUN mkdir /zu
 COPY zu /zu
 WORKDIR /zu
 RUN ./gradlew --console=verbose --info shadowJar
-
 FROM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}zookeeper:${ZK_VERSION}
 ENV ZK_USER=container
+ENV ZK_VERSION=3.6.3
 # Add container user
 RUN useradd -g 1000 ${ZK_USER}
 COPY bin /usr/local/bin
@@ -40,7 +40,6 @@ RUN chown -R ${ZK_USER}:1000 /data/ /conf/ /bin/ && \
     chmod +rwx -R /data/ /conf/ /bin/
 ENV ZOO_LOG_DIR=/opt/zookeeper/logs
 ENV ZOO_LOG4J_PROP=INFO,ROLLINGFILE
-ARG ZK_VERSION=3.6.3
 RUN sed -i 's/ZOO_LOG_FILE=.*/ZOO_LOG_FILE=zookeeper.log/' /apache-zookeeper-${ZK_VERSION}-bin/bin/zkServer.sh
 RUN apt-get -q update && \
     apt-get install -y vim dnsutils curl procps
