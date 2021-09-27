@@ -36,7 +36,8 @@ RUN chown ${ZK_USER}:1000 /docker-entrypoint.sh && \
 
 RUN chown -R ${ZK_USER}:1000 /apache-zookeeper-${ZK_VERSION}-bin/ && \
     chmod +x -R /apache-zookeeper-${ZK_VERSION}-bin/
-
+RUN chown -R ${ZK_USER}:1000 /data/ /conf/ /bin/ && \
+    chmod +rwx -R /data/ /conf/ /bin/
 ENV ZOO_LOG_DIR=/opt/zookeeper/logs
 ENV ZOO_LOG4J_PROP=INFO,ROLLINGFILE
 ARG ZK_VERSION=3.6.3
