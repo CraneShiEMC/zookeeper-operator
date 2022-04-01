@@ -109,7 +109,12 @@ if [[ "$ACTIVE_ENSEMBLE" == false ]]; then
 else
   # An ensemble exists, check to see if this node is already a member.
   if [[ "$ONDISK_MYID_CONFIG" == false || "$ONDISK_DYN_CONFIG" == false ]]; then
-    REGISTER_NODE=true
+    # for the first node, there is no ensemble to register.
+    if [[ $MYID -eq 1 ]]; then
+      REGISTER_NODE=false
+    else
+      REGISTER_NODE=true
+    fi
   else
     REGISTER_NODE=false
   fi
