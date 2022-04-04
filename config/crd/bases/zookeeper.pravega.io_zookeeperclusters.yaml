@@ -1,6 +1,11 @@
+
+---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.6.2
+  creationTimestamp: null
   name: zookeeperclusters.zookeeper.pravega.io
 spec:
   group: zookeeper.pravega.io
@@ -721,10 +726,10 @@ spec:
                               be referred to by services.
                             type: string
                           protocol:
+                            default: TCP
                             description: Protocol for port. Must be UDP, TCP, or SCTP.
                               Defaults to "TCP".
                             type: string
-                            default: TCP
                         required:
                         - containerPort
                         type: object
@@ -1036,8 +1041,7 @@ spec:
                         can be used to provide different probe parameters at the beginning
                         of a Pod''s lifecycle, when it might take a long time to load
                         data or warm a cache, than during steady-state operation.
-                        This cannot be updated. This is a beta feature enabled by
-                        the StartupProbe feature flag. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
+                        This cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
                       properties:
                         exec:
                           description: One and only one of the following should be
@@ -1870,10 +1874,10 @@ spec:
                               be referred to by services.
                             type: string
                           protocol:
+                            default: TCP
                             description: Protocol for port. Must be UDP, TCP, or SCTP.
                               Defaults to "TCP".
                             type: string
-                            default: TCP
                         required:
                         - containerPort
                         type: object
@@ -2185,8 +2189,7 @@ spec:
                         can be used to provide different probe parameters at the beginning
                         of a Pod''s lifecycle, when it might take a long time to load
                         data or warm a cache, than during steady-state operation.
-                        This cannot be updated. This is a beta feature enabled by
-                        the StartupProbe feature flag. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
+                        This cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
                       properties:
                         exec:
                           description: One and only one of the following should be
@@ -2453,18 +2456,14 @@ spec:
                         type: array
                       dataSource:
                         description: 'This field can be used to specify either: *
-                          An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot
-                          - Beta) * An existing PVC (PersistentVolumeClaim) * An existing
-                          custom resource/object that implements data population (Alpha)
-                          In order to use VolumeSnapshot object types, the appropriate
-                          feature gate must be enabled (VolumeSnapshotDataSource or
-                          AnyVolumeDataSource) If the provisioner or an external controller
-                          can support the specified data source, it will create a
-                          new volume based on the contents of the specified data source.
-                          If the specified data source is not supported, the volume
-                          will not be created and the failure will be reported as
-                          an event. In the future, we plan to support more data source
-                          types and the behavior of the provisioner may change.'
+                          An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot)
+                          * An existing PVC (PersistentVolumeClaim) * An existing
+                          custom resource that implements data population (Alpha)
+                          In order to use custom resource types that implement data
+                          population, the AnyVolumeDataSource feature gate must be
+                          enabled. If the provisioner or an external controller can
+                          support the specified data source, it will create a new
+                          volume based on the contents of the specified data source.'
                         properties:
                           apiGroup:
                             description: APIGroup is the group for the resource being
@@ -3382,7 +3381,7 @@ spec:
                           support fsGroup based ownership(and permissions). It will
                           have no effect on ephemeral volume types such as: secret,
                           configmaps and emptydir. Valid values are "OnRootMismatch"
-                          and "Always". If not specified defaults to "Always".'
+                          and "Always". If not specified, "Always" is used.'
                         type: string
                       runAsGroup:
                         description: The GID to run the entrypoint of the container
@@ -3587,10 +3586,10 @@ spec:
                         services.
                       type: string
                     protocol:
+                      default: TCP
                       description: Protocol for port. Must be UDP, TCP, or SCTP. Defaults
                         to "TCP".
                       type: string
-                      default: TCP
                   required:
                   - containerPort
                   type: object
@@ -3660,7 +3659,9 @@ spec:
                   StorageType is Persistence storage
                 type: string
               triggerRollingRestart:
-                description: if set to true, triggers a cluster restart. this value should be set to false by the operator once the restart completes for all pods.
+                description: TriggerRollingRestart if set to true will instruct operator
+                  to restart all the pods in the zookeeper cluster, after which this
+                  value will be set to false
                 type: boolean
               volumeMounts:
                 description: VolumeMounts defines to support customized volumeMounts
@@ -4146,20 +4147,15 @@ spec:
                                   type: array
                                 dataSource:
                                   description: 'This field can be used to specify
-                                    either: * An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot
-                                    - Beta) * An existing PVC (PersistentVolumeClaim)
-                                    * An existing custom resource/object that implements
-                                    data population (Alpha) In order to use VolumeSnapshot
-                                    object types, the appropriate feature gate must
-                                    be enabled (VolumeSnapshotDataSource or AnyVolumeDataSource)
-                                    If the provisioner or an external controller can
-                                    support the specified data source, it will create
-                                    a new volume based on the contents of the specified
-                                    data source. If the specified data source is not
-                                    supported, the volume will not be created and
-                                    the failure will be reported as an event. In the
-                                    future, we plan to support more data source types
-                                    and the behavior of the provisioner may change.'
+                                    either: * An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot)
+                                    * An existing PVC (PersistentVolumeClaim) * An
+                                    existing custom resource that implements data
+                                    population (Alpha) In order to use custom resource
+                                    types that implement data population, the AnyVolumeDataSource
+                                    feature gate must be enabled. If the provisioner
+                                    or an external controller can support the specified
+                                    data source, it will create a new volume based
+                                    on the contents of the specified data source.'
                                   properties:
                                     apiGroup:
                                       description: APIGroup is the group for the resource
@@ -4862,8 +4858,6 @@ spec:
                                 type: object
                             type: object
                           type: array
-                      required:
-                      - sources
                       type: object
                     quobyte:
                       description: Quobyte represents a Quobyte mount on the host
@@ -5216,3 +5210,9 @@ spec:
     storage: true
     subresources:
       status: {}
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

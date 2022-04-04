@@ -9,7 +9,7 @@
 #
 
 ARG DOCKER_REGISTRY
-ARG ZK_VERSION=3.6.3
+ARG ZK_VERSION=3.8.0
 FROM  ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}openjdk:11-jdk
 RUN mkdir /zu
 COPY zu /zu
@@ -18,7 +18,7 @@ RUN ./gradlew --console=verbose --info shadowJar
 
 FROM ${DOCKER_REGISTRY:+$DOCKER_REGISTRY/}zookeeper:${ZK_VERSION}
 ENV ZK_USER=container
-ARG ZK_VERSION=3.6.3
+ARG ZK_VERSION=3.8.0
 RUN useradd -g 1000 ${ZK_USER}
 COPY bin /usr/local/bin
 RUN chmod +x /usr/local/bin/*
