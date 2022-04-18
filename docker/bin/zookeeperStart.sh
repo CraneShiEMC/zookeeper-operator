@@ -20,7 +20,7 @@ MYID_FILE=$DATA_DIR/myid
 LOG4J_CONF=/conf/log4j-quiet.properties
 DYNCONFIG=$DATA_DIR/zoo.cfg.dynamic
 STATIC_CONFIG=/data/conf/zoo.cfg
-ZK_VERSION=3.6.3
+ZK_VERSION=3.8.0
 
 # Extract resource name and this members ordinal value from pod hostname
 if [[ $HOST =~ (.*)-([0-9]+)$ ]]; then
