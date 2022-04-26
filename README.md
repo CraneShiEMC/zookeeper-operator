@@ -57,7 +57,7 @@ To understand how to deploy the zookeeper operator using helm, refer to [this](c
 Register the `ZookeeperCluster` custom resource definition (CRD).
 
 ```
-$ kubectl create -f deploy/crds
+$ kubectl create -f config/crd/bases
 ```
 
 You can choose to enable Zookeeper operator for all namespaces or just for a specific namespace. The example is using the `default` namespace, but feel free to edit the Yaml files and use a different namespace.
@@ -66,20 +66,16 @@ Create the operator role and role binding.
 
 ```
 // default namespace
-$ kubectl create -f deploy/default_ns/rbac.yaml
+$ kubectl create -f config/rbac/default_ns_rbac.yaml
 
 // all namespaces
-$ kubectl create -f deploy/all_ns/rbac.yaml
+$ kubectl create -f config/rbac/all_ns_rbac.yaml
 ```
 
 Deploy the Zookeeper operator.
 
 ```
-// default namespace
-$ kubectl create -f deploy/default_ns/operator.yaml
-
-// all namespaces
-$ kubectl create -f deploy/all_ns/operator.yaml
+$ kubectl create -f deploy/manager/manager.yaml
 ```
 
 Verify that the Zookeeper operator is running.
@@ -152,7 +148,8 @@ svc/zookeeper-client     ClusterIP   10.31.243.173   <none>        2181/TCP     
 svc/zookeeper-headless   ClusterIP   None            <none>        2888/TCP,3888/TCP   2m
 ```
 
->Note: If you want to configure non default service accounts to zookeeper pods, set the service account inside pod.This support is added from zookeeper operator version `0.2.9` onwards.
+> Note: If you want to configure zookeeper pod, for example to change the service account or the CPU limits, you can set the following properties: [~/charts/zookeeper/templates/zookeeper.yaml](https://github.com/pravega/zookeeper-operator/blob/master/charts/zookeeper/templates/zookeeper.yaml).
+> Service account configuration is available from zookeeper operator version `0.2.9` onwards.
 
 ```
 apiVersion: "zookeeper.pravega.io/v1beta1"
@@ -162,6 +159,13 @@ metadata:
 spec:
   pod:
     serviceAccountName: "zookeeper"
+    resources:
+        requests:
+          cpu: 200m
+          memory: 256Mi
+        limits:
+          cpu: 200m
+          memory: 256Mi
 ```
 
 ### Deploy a sample Zookeeper cluster with Ephemeral storage
@@ -311,9 +315,10 @@ Refer to [this](charts/zookeeper-operator#uninstalling-the-chart).
 To delete all clusters, delete all cluster CR objects before uninstalling the operator.
 
 ```
-$ kubectl delete -f deploy/default_ns
+$ kubectl delete -f config/manager/manager.yaml
+$ kubectl delete -f config/rbac/default_ns_rbac.yaml
 // or, depending on how you deployed it
-$ kubectl delete -f deploy/all_ns
+$ kubectl delete -f config/rbac/all_ns_rbac.yaml
 ```
 
 ### The AdminServer
@@ -366,7 +371,7 @@ The list of available commands are
 ### Build the operator image
 
 Requirements:
-  - Go 1.16+
+  - Go 1.17+
 
 Use the `make` command to build the Zookeeper operator image.
 
@@ -417,7 +422,7 @@ You can run the operator locally to help with development, testing, and debuggin
 The following command will run the operator locally with the default Kubernetes config file present at `$HOME/.kube/config`. Use the `--kubeconfig` flag to provide a different path.
 
 ```
-$ operator-sdk up local
+$ make run-local
 ```
 
 ### Installation on Google Kubernetes Engine

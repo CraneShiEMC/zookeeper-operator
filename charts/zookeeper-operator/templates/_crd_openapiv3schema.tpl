@@ -142,10 +142,11 @@ openAPIV3Schema:
                         CMD is used if this is not provided. Variable references $(VAR_NAME)
                         are expanded using the container''s environment. If a variable
                         cannot be resolved, the reference in the input string will
-                        be unchanged. The $(VAR_NAME) syntax can be escaped with a
-                        double $$, ie: $$(VAR_NAME). Escaped references will never
-                        be expanded, regardless of whether the variable exists or
-                        not. Cannot be updated. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell'
+                        be unchanged. Double $$ are reduced to a single $, which allows
+                        for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+                        produce the string literal "$(VAR_NAME)". Escaped references
+                        will never be expanded, regardless of whether the variable
+                        exists or not. Cannot be updated. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell'
                       items:
                         type: string
                       type: array
@@ -154,10 +155,12 @@ openAPIV3Schema:
                         The docker image''s ENTRYPOINT is used if this is not provided.
                         Variable references $(VAR_NAME) are expanded using the container''s
                         environment. If a variable cannot be resolved, the reference
-                        in the input string will be unchanged. The $(VAR_NAME) syntax
-                        can be escaped with a double $$, ie: $$(VAR_NAME). Escaped
-                        references will never be expanded, regardless of whether the
-                        variable exists or not. Cannot be updated. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell'
+                        in the input string will be unchanged. Double $$ are reduced
+                        to a single $, which allows for escaping the $(VAR_NAME) syntax:
+                        i.e. "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)".
+                        Escaped references will never be expanded, regardless of whether
+                        the variable exists or not. Cannot be updated. More info:
+                        https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell'
                       items:
                         type: string
                       type: array
@@ -174,13 +177,15 @@ openAPIV3Schema:
                             type: string
                           value:
                             description: 'Variable references $(VAR_NAME) are expanded
-                              using the previous defined environment variables in
+                              using the previously defined environment variables in
                               the container and any service environment variables.
                               If a variable cannot be resolved, the reference in the
-                              input string will be unchanged. The $(VAR_NAME) syntax
-                              can be escaped with a double $$, ie: $$(VAR_NAME). Escaped
-                              references will never be expanded, regardless of whether
-                              the variable exists or not. Defaults to "".'
+                              input string will be unchanged. Double $$ are reduced
+                              to a single $, which allows for escaping the $(VAR_NAME)
+                              syntax: i.e. "$$(VAR_NAME)" will produce the string
+                              literal "$(VAR_NAME)". Escaped references will never
+                              be expanded, regardless of whether the variable exists
+                              or not. Defaults to "".'
                             type: string
                           valueFrom:
                             description: Source for the environment variable's value.
@@ -340,8 +345,7 @@ openAPIV3Schema:
                             info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks'
                           properties:
                             exec:
-                              description: One and only one of the following should
-                                be specified. Exec specifies the action to take.
+                              description: Exec specifies the action to take.
                               properties:
                                 command:
                                   description: Command is the command line to execute
@@ -402,9 +406,10 @@ openAPIV3Schema:
                               - port
                               type: object
                             tcpSocket:
-                              description: 'TCPSocket specifies an action involving
-                                a TCP port. TCP hooks not yet supported TODO: implement
-                                a realistic TCP lifecycle hook'
+                              description: Deprecated. TCPSocket is NOT supported
+                                as a LifecycleHandler and kept for the backward compatibility.
+                                There are no validation of this field and lifecycle
+                                hooks will fail in runtime when tcp handler is specified.
                               properties:
                                 host:
                                   description: 'Optional: Host name to connect to,
@@ -427,18 +432,16 @@ openAPIV3Schema:
                             is terminated due to an API request or management event
                             such as liveness/startup probe failure, preemption, resource
                             contention, etc. The handler is not called if the container
-                            crashes or exits. The reason for termination is passed
-                            to the handler. The Pod''s termination grace period countdown
-                            begins before the PreStop hooked is executed. Regardless
-                            of the outcome of the handler, the container will eventually
-                            terminate within the Pod''s termination grace period.
-                            Other management of the container blocks until the hook
-                            completes or until the termination grace period is reached.
-                            More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks'
+                            crashes or exits. The Pod''s termination grace period
+                            countdown begins before the PreStop hook is executed.
+                            Regardless of the outcome of the handler, the container
+                            will eventually terminate within the Pod''s termination
+                            grace period (unless delayed by finalizers). Other management
+                            of the container blocks until the hook completes or until
+                            the termination grace period is reached. More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks'
                           properties:
                             exec:
-                              description: One and only one of the following should
-                                be specified. Exec specifies the action to take.
+                              description: Exec specifies the action to take.
                               properties:
                                 command:
                                   description: Command is the command line to execute
@@ -499,9 +502,10 @@ openAPIV3Schema:
                               - port
                               type: object
                             tcpSocket:
-                              description: 'TCPSocket specifies an action involving
-                                a TCP port. TCP hooks not yet supported TODO: implement
-                                a realistic TCP lifecycle hook'
+                              description: Deprecated. TCPSocket is NOT supported
+                                as a LifecycleHandler and kept for the backward compatibility.
+                                There are no validation of this field and lifecycle
+                                hooks will fail in runtime when tcp handler is specified.
                               properties:
                                 host:
                                   description: 'Optional: Host name to connect to,
@@ -526,8 +530,7 @@ openAPIV3Schema:
                         info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
                       properties:
                         exec:
-                          description: One and only one of the following should be
-                            specified. Exec specifies the action to take.
+                          description: Exec specifies the action to take.
                           properties:
                             command:
                               description: Command is the command line to execute
@@ -548,6 +551,25 @@ openAPIV3Schema:
                             to 3. Minimum value is 1.
                           format: int32
                           type: integer
+                        grpc:
+                          description: GRPC specifies an action involving a GRPC port.
+                            This is an alpha field and requires enabling GRPCContainerProbe
+                            feature gate.
+                          properties:
+                            port:
+                              description: Port number of the gRPC service. Number
+                                must be in the range 1 to 65535.
+                              format: int32
+                              type: integer
+                            service:
+                              description: "Service is the name of the service to
+                                place in the gRPC HealthCheckRequest (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+                                \n If this is not specified, the default behavior
+                                is defined by gRPC."
+                              type: string
+                          required:
+                          - port
+                          type: object
                         httpGet:
                           description: HTTPGet specifies the http request to perform.
                           properties:
@@ -611,9 +633,8 @@ openAPIV3Schema:
                           format: int32
                           type: integer
                         tcpSocket:
-                          description: 'TCPSocket specifies an action involving a
-                            TCP port. TCP hooks not yet supported TODO: implement
-                            a realistic TCP lifecycle hook'
+                          description: TCPSocket specifies an action involving a TCP
+                            port.
                           properties:
                             host:
                               description: 'Optional: Host name to connect to, defaults
@@ -630,6 +651,23 @@ openAPIV3Schema:
                           required:
                           - port
                           type: object
+                        terminationGracePeriodSeconds:
+                          description: Optional duration in seconds the pod needs
+                            to terminate gracefully upon probe failure. The grace
+                            period is the duration in seconds after the processes
+                            running in the pod are sent a termination signal and the
+                            time when the processes are forcibly halted with a kill
+                            signal. Set this value longer than the expected cleanup
+                            time for your process. If this value is nil, the pod's
+                            terminationGracePeriodSeconds will be used. Otherwise,
+                            this value overrides the value provided by the pod spec.
+                            Value must be non-negative integer. The value zero indicates
+                            stop immediately via the kill signal (no opportunity to
+                            shut down). This is a beta field and requires enabling
+                            ProbeTerminationGracePeriod feature gate. Minimum value
+                            is 1. spec.terminationGracePeriodSeconds is used if unset.
+                          format: int64
+                          type: integer
                         timeoutSeconds:
                           description: 'Number of seconds after which the probe times
                             out. Defaults to 1 second. Minimum value is 1. More info:
@@ -676,6 +714,7 @@ openAPIV3Schema:
                               be referred to by services.
                             type: string
                           protocol:
+                            default: TCP
                             description: Protocol for port. Must be UDP, TCP, or SCTP.
                               Defaults to "TCP".
                             type: string
@@ -685,9 +724,7 @@ openAPIV3Schema:
                       type: array
                       x-kubernetes-list-map-keys:
                       - containerPort
-                      {{- if semverCompare "< 1.18-0" .Capabilities.KubeVersion.GitVersion }}
                       - protocol
-                      {{- end }}
                       x-kubernetes-list-type: map
                     readinessProbe:
                       description: 'Periodic probe of container service readiness.
@@ -695,8 +732,7 @@ openAPIV3Schema:
                         fails. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
                       properties:
                         exec:
-                          description: One and only one of the following should be
-                            specified. Exec specifies the action to take.
+                          description: Exec specifies the action to take.
                           properties:
                             command:
                               description: Command is the command line to execute
@@ -717,6 +753,25 @@ openAPIV3Schema:
                             to 3. Minimum value is 1.
                           format: int32
                           type: integer
+                        grpc:
+                          description: GRPC specifies an action involving a GRPC port.
+                            This is an alpha field and requires enabling GRPCContainerProbe
+                            feature gate.
+                          properties:
+                            port:
+                              description: Port number of the gRPC service. Number
+                                must be in the range 1 to 65535.
+                              format: int32
+                              type: integer
+                            service:
+                              description: "Service is the name of the service to
+                                place in the gRPC HealthCheckRequest (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+                                \n If this is not specified, the default behavior
+                                is defined by gRPC."
+                              type: string
+                          required:
+                          - port
+                          type: object
                         httpGet:
                           description: HTTPGet specifies the http request to perform.
                           properties:
@@ -780,9 +835,8 @@ openAPIV3Schema:
                           format: int32
                           type: integer
                         tcpSocket:
-                          description: 'TCPSocket specifies an action involving a
-                            TCP port. TCP hooks not yet supported TODO: implement
-                            a realistic TCP lifecycle hook'
+                          description: TCPSocket specifies an action involving a TCP
+                            port.
                           properties:
                             host:
                               description: 'Optional: Host name to connect to, defaults
@@ -799,6 +853,23 @@ openAPIV3Schema:
                           required:
                           - port
                           type: object
+                        terminationGracePeriodSeconds:
+                          description: Optional duration in seconds the pod needs
+                            to terminate gracefully upon probe failure. The grace
+                            period is the duration in seconds after the processes
+                            running in the pod are sent a termination signal and the
+                            time when the processes are forcibly halted with a kill
+                            signal. Set this value longer than the expected cleanup
+                            time for your process. If this value is nil, the pod's
+                            terminationGracePeriodSeconds will be used. Otherwise,
+                            this value overrides the value provided by the pod spec.
+                            Value must be non-negative integer. The value zero indicates
+                            stop immediately via the kill signal (no opportunity to
+                            shut down). This is a beta field and requires enabling
+                            ProbeTerminationGracePeriod feature gate. Minimum value
+                            is 1. spec.terminationGracePeriodSeconds is used if unset.
+                          format: int64
+                          type: integer
                         timeoutSeconds:
                           description: 'Number of seconds after which the probe times
                             out. Defaults to 1 second. Minimum value is 1. More info:
@@ -808,7 +879,7 @@ openAPIV3Schema:
                       type: object
                     resources:
                       description: 'Compute Resources required by this container.
-                        Cannot be updated. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                        Cannot be updated. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                       properties:
                         limits:
                           additionalProperties:
@@ -818,7 +889,7 @@ openAPIV3Schema:
                             pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                             x-kubernetes-int-or-string: true
                           description: 'Limits describes the maximum amount of compute
-                            resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                            resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                           type: object
                         requests:
                           additionalProperties:
@@ -831,13 +902,14 @@ openAPIV3Schema:
                             resources required. If Requests is omitted for a container,
                             it defaults to Limits if that is explicitly specified,
                             otherwise to an implementation-defined value. More info:
-                            https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                            https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                           type: object
                       type: object
                     securityContext:
-                      description: 'Security options the pod should run with. More
-                        info: https://kubernetes.io/docs/concepts/policy/security-context/
-                        More info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/'
+                      description: 'SecurityContext defines the security options the
+                        container should be run with. If set, the fields of SecurityContext
+                        override the equivalent fields of PodSecurityContext. More
+                        info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/'
                       properties:
                         allowPrivilegeEscalation:
                           description: 'AllowPrivilegeEscalation controls whether
@@ -845,12 +917,14 @@ openAPIV3Schema:
                             This bool directly controls if the no_new_privs flag will
                             be set on the container process. AllowPrivilegeEscalation
                             is true always when the container is: 1) run as Privileged
-                            2) has CAP_SYS_ADMIN'
+                            2) has CAP_SYS_ADMIN Note that this field cannot be set
+                            when spec.os.name is windows.'
                           type: boolean
                         capabilities:
                           description: The capabilities to add/drop when running containers.
                             Defaults to the default set of capabilities granted by
-                            the container runtime.
+                            the container runtime. Note that this field cannot be
+                            set when spec.os.name is windows.
                           properties:
                             add:
                               description: Added capabilities
@@ -870,25 +944,29 @@ openAPIV3Schema:
                         privileged:
                           description: Run container in privileged mode. Processes
                             in privileged containers are essentially equivalent to
-                            root on the host. Defaults to false.
+                            root on the host. Defaults to false. Note that this field
+                            cannot be set when spec.os.name is windows.
                           type: boolean
                         procMount:
                           description: procMount denotes the type of proc mount to
                             use for the containers. The default is DefaultProcMount
                             which uses the container runtime defaults for readonly
                             paths and masked paths. This requires the ProcMountType
-                            feature flag to be enabled.
+                            feature flag to be enabled. Note that this field cannot
+                            be set when spec.os.name is windows.
                           type: string
                         readOnlyRootFilesystem:
                           description: Whether this container has a read-only root
-                            filesystem. Default is false.
+                            filesystem. Default is false. Note that this field cannot
+                            be set when spec.os.name is windows.
                           type: boolean
                         runAsGroup:
                           description: The GID to run the entrypoint of the container
                             process. Uses runtime default if unset. May also be set
                             in PodSecurityContext.  If set in both SecurityContext
                             and PodSecurityContext, the value specified in SecurityContext
-                            takes precedence.
+                            takes precedence. Note that this field cannot be set when
+                            spec.os.name is windows.
                           format: int64
                           type: integer
                         runAsNonRoot:
@@ -906,7 +984,8 @@ openAPIV3Schema:
                             process. Defaults to user specified in image metadata
                             if unspecified. May also be set in PodSecurityContext.  If
                             set in both SecurityContext and PodSecurityContext, the
-                            value specified in SecurityContext takes precedence.
+                            value specified in SecurityContext takes precedence. Note
+                            that this field cannot be set when spec.os.name is windows.
                           format: int64
                           type: integer
                         seLinuxOptions:
@@ -915,7 +994,8 @@ openAPIV3Schema:
                             random SELinux context for each container.  May also be
                             set in PodSecurityContext.  If set in both SecurityContext
                             and PodSecurityContext, the value specified in SecurityContext
-                            takes precedence.
+                            takes precedence. Note that this field cannot be set when
+                            spec.os.name is windows.
                           properties:
                             level:
                               description: Level is SELinux level label that applies
@@ -938,6 +1018,8 @@ openAPIV3Schema:
                           description: The seccomp options to use by this container.
                             If seccomp options are provided at both the pod & container
                             level, the container options override the pod options.
+                            Note that this field cannot be set when spec.os.name is
+                            windows.
                           properties:
                             localhostProfile:
                               description: localhostProfile indicates a profile defined
@@ -963,6 +1045,8 @@ openAPIV3Schema:
                             containers. If unspecified, the options from the PodSecurityContext
                             will be used. If set in both SecurityContext and PodSecurityContext,
                             the value specified in SecurityContext takes precedence.
+                            Note that this field cannot be set when spec.os.name is
+                            linux.
                           properties:
                             gmsaCredentialSpec:
                               description: GMSACredentialSpec is where the GMSA admission
@@ -974,6 +1058,19 @@ openAPIV3Schema:
                               description: GMSACredentialSpecName is the name of the
                                 GMSA credential spec to use.
                               type: string
+                            hostProcess:
+                              description: HostProcess determines if a container should
+                                be run as a 'Host Process' container. This field is
+                                alpha-level and will only be honored by components
+                                that enable the WindowsHostProcessContainers feature
+                                flag. Setting this field without the feature flag
+                                will result in errors when validating the Pod. All
+                                of a Pod's containers must have the same effective
+                                HostProcess value (it is not allowed to have a mix
+                                of HostProcess containers and non-HostProcess containers).  In
+                                addition, if HostProcess is true then HostNetwork
+                                must also be set to true.
+                              type: boolean
                             runAsUserName:
                               description: The UserName in Windows to run the entrypoint
                                 of the container process. Defaults to the user specified
@@ -992,12 +1089,10 @@ openAPIV3Schema:
                         can be used to provide different probe parameters at the beginning
                         of a Pod''s lifecycle, when it might take a long time to load
                         data or warm a cache, than during steady-state operation.
-                        This cannot be updated. This is a beta feature enabled by
-                        the StartupProbe feature flag. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
+                        This cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
                       properties:
                         exec:
-                          description: One and only one of the following should be
-                            specified. Exec specifies the action to take.
+                          description: Exec specifies the action to take.
                           properties:
                             command:
                               description: Command is the command line to execute
@@ -1018,6 +1113,25 @@ openAPIV3Schema:
                             to 3. Minimum value is 1.
                           format: int32
                           type: integer
+                        grpc:
+                          description: GRPC specifies an action involving a GRPC port.
+                            This is an alpha field and requires enabling GRPCContainerProbe
+                            feature gate.
+                          properties:
+                            port:
+                              description: Port number of the gRPC service. Number
+                                must be in the range 1 to 65535.
+                              format: int32
+                              type: integer
+                            service:
+                              description: "Service is the name of the service to
+                                place in the gRPC HealthCheckRequest (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+                                \n If this is not specified, the default behavior
+                                is defined by gRPC."
+                              type: string
+                          required:
+                          - port
+                          type: object
                         httpGet:
                           description: HTTPGet specifies the http request to perform.
                           properties:
@@ -1081,9 +1195,8 @@ openAPIV3Schema:
                           format: int32
                           type: integer
                         tcpSocket:
-                          description: 'TCPSocket specifies an action involving a
-                            TCP port. TCP hooks not yet supported TODO: implement
-                            a realistic TCP lifecycle hook'
+                          description: TCPSocket specifies an action involving a TCP
+                            port.
                           properties:
                             host:
                               description: 'Optional: Host name to connect to, defaults
@@ -1100,6 +1213,23 @@ openAPIV3Schema:
                           required:
                           - port
                           type: object
+                        terminationGracePeriodSeconds:
+                          description: Optional duration in seconds the pod needs
+                            to terminate gracefully upon probe failure. The grace
+                            period is the duration in seconds after the processes
+                            running in the pod are sent a termination signal and the
+                            time when the processes are forcibly halted with a kill
+                            signal. Set this value longer than the expected cleanup
+                            time for your process. If this value is nil, the pod's
+                            terminationGracePeriodSeconds will be used. Otherwise,
+                            this value overrides the value provided by the pod spec.
+                            Value must be non-negative integer. The value zero indicates
+                            stop immediately via the kill signal (no opportunity to
+                            shut down). This is a beta field and requires enabling
+                            ProbeTerminationGracePeriod feature gate. Minimum value
+                            is 1. spec.terminationGracePeriodSeconds is used if unset.
+                          format: int64
+                          type: integer
                         timeoutSeconds:
                           description: 'Number of seconds after which the probe times
                             out. Defaults to 1 second. Minimum value is 1. More info:
@@ -1292,10 +1422,11 @@ openAPIV3Schema:
                         CMD is used if this is not provided. Variable references $(VAR_NAME)
                         are expanded using the container''s environment. If a variable
                         cannot be resolved, the reference in the input string will
-                        be unchanged. The $(VAR_NAME) syntax can be escaped with a
-                        double $$, ie: $$(VAR_NAME). Escaped references will never
-                        be expanded, regardless of whether the variable exists or
-                        not. Cannot be updated. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell'
+                        be unchanged. Double $$ are reduced to a single $, which allows
+                        for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+                        produce the string literal "$(VAR_NAME)". Escaped references
+                        will never be expanded, regardless of whether the variable
+                        exists or not. Cannot be updated. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell'
                       items:
                         type: string
                       type: array
@@ -1304,10 +1435,12 @@ openAPIV3Schema:
                         The docker image''s ENTRYPOINT is used if this is not provided.
                         Variable references $(VAR_NAME) are expanded using the container''s
                         environment. If a variable cannot be resolved, the reference
-                        in the input string will be unchanged. The $(VAR_NAME) syntax
-                        can be escaped with a double $$, ie: $$(VAR_NAME). Escaped
-                        references will never be expanded, regardless of whether the
-                        variable exists or not. Cannot be updated. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell'
+                        in the input string will be unchanged. Double $$ are reduced
+                        to a single $, which allows for escaping the $(VAR_NAME) syntax:
+                        i.e. "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)".
+                        Escaped references will never be expanded, regardless of whether
+                        the variable exists or not. Cannot be updated. More info:
+                        https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell'
                       items:
                         type: string
                       type: array
@@ -1324,13 +1457,15 @@ openAPIV3Schema:
                             type: string
                           value:
                             description: 'Variable references $(VAR_NAME) are expanded
-                              using the previous defined environment variables in
+                              using the previously defined environment variables in
                               the container and any service environment variables.
                               If a variable cannot be resolved, the reference in the
-                              input string will be unchanged. The $(VAR_NAME) syntax
-                              can be escaped with a double $$, ie: $$(VAR_NAME). Escaped
-                              references will never be expanded, regardless of whether
-                              the variable exists or not. Defaults to "".'
+                              input string will be unchanged. Double $$ are reduced
+                              to a single $, which allows for escaping the $(VAR_NAME)
+                              syntax: i.e. "$$(VAR_NAME)" will produce the string
+                              literal "$(VAR_NAME)". Escaped references will never
+                              be expanded, regardless of whether the variable exists
+                              or not. Defaults to "".'
                             type: string
                           valueFrom:
                             description: Source for the environment variable's value.
@@ -1490,8 +1625,7 @@ openAPIV3Schema:
                             info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks'
                           properties:
                             exec:
-                              description: One and only one of the following should
-                                be specified. Exec specifies the action to take.
+                              description: Exec specifies the action to take.
                               properties:
                                 command:
                                   description: Command is the command line to execute
@@ -1552,9 +1686,10 @@ openAPIV3Schema:
                               - port
                               type: object
                             tcpSocket:
-                              description: 'TCPSocket specifies an action involving
-                                a TCP port. TCP hooks not yet supported TODO: implement
-                                a realistic TCP lifecycle hook'
+                              description: Deprecated. TCPSocket is NOT supported
+                                as a LifecycleHandler and kept for the backward compatibility.
+                                There are no validation of this field and lifecycle
+                                hooks will fail in runtime when tcp handler is specified.
                               properties:
                                 host:
                                   description: 'Optional: Host name to connect to,
@@ -1577,18 +1712,16 @@ openAPIV3Schema:
                             is terminated due to an API request or management event
                             such as liveness/startup probe failure, preemption, resource
                             contention, etc. The handler is not called if the container
-                            crashes or exits. The reason for termination is passed
-                            to the handler. The Pod''s termination grace period countdown
-                            begins before the PreStop hooked is executed. Regardless
-                            of the outcome of the handler, the container will eventually
-                            terminate within the Pod''s termination grace period.
-                            Other management of the container blocks until the hook
-                            completes or until the termination grace period is reached.
-                            More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks'
+                            crashes or exits. The Pod''s termination grace period
+                            countdown begins before the PreStop hook is executed.
+                            Regardless of the outcome of the handler, the container
+                            will eventually terminate within the Pod''s termination
+                            grace period (unless delayed by finalizers). Other management
+                            of the container blocks until the hook completes or until
+                            the termination grace period is reached. More info: https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/#container-hooks'
                           properties:
                             exec:
-                              description: One and only one of the following should
-                                be specified. Exec specifies the action to take.
+                              description: Exec specifies the action to take.
                               properties:
                                 command:
                                   description: Command is the command line to execute
@@ -1649,9 +1782,10 @@ openAPIV3Schema:
                               - port
                               type: object
                             tcpSocket:
-                              description: 'TCPSocket specifies an action involving
-                                a TCP port. TCP hooks not yet supported TODO: implement
-                                a realistic TCP lifecycle hook'
+                              description: Deprecated. TCPSocket is NOT supported
+                                as a LifecycleHandler and kept for the backward compatibility.
+                                There are no validation of this field and lifecycle
+                                hooks will fail in runtime when tcp handler is specified.
                               properties:
                                 host:
                                   description: 'Optional: Host name to connect to,
@@ -1676,8 +1810,7 @@ openAPIV3Schema:
                         info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
                       properties:
                         exec:
-                          description: One and only one of the following should be
-                            specified. Exec specifies the action to take.
+                          description: Exec specifies the action to take.
                           properties:
                             command:
                               description: Command is the command line to execute
@@ -1698,6 +1831,25 @@ openAPIV3Schema:
                             to 3. Minimum value is 1.
                           format: int32
                           type: integer
+                        grpc:
+                          description: GRPC specifies an action involving a GRPC port.
+                            This is an alpha field and requires enabling GRPCContainerProbe
+                            feature gate.
+                          properties:
+                            port:
+                              description: Port number of the gRPC service. Number
+                                must be in the range 1 to 65535.
+                              format: int32
+                              type: integer
+                            service:
+                              description: "Service is the name of the service to
+                                place in the gRPC HealthCheckRequest (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+                                \n If this is not specified, the default behavior
+                                is defined by gRPC."
+                              type: string
+                          required:
+                          - port
+                          type: object
                         httpGet:
                           description: HTTPGet specifies the http request to perform.
                           properties:
@@ -1761,9 +1913,8 @@ openAPIV3Schema:
                           format: int32
                           type: integer
                         tcpSocket:
-                          description: 'TCPSocket specifies an action involving a
-                            TCP port. TCP hooks not yet supported TODO: implement
-                            a realistic TCP lifecycle hook'
+                          description: TCPSocket specifies an action involving a TCP
+                            port.
                           properties:
                             host:
                               description: 'Optional: Host name to connect to, defaults
@@ -1780,6 +1931,23 @@ openAPIV3Schema:
                           required:
                           - port
                           type: object
+                        terminationGracePeriodSeconds:
+                          description: Optional duration in seconds the pod needs
+                            to terminate gracefully upon probe failure. The grace
+                            period is the duration in seconds after the processes
+                            running in the pod are sent a termination signal and the
+                            time when the processes are forcibly halted with a kill
+                            signal. Set this value longer than the expected cleanup
+                            time for your process. If this value is nil, the pod's
+                            terminationGracePeriodSeconds will be used. Otherwise,
+                            this value overrides the value provided by the pod spec.
+                            Value must be non-negative integer. The value zero indicates
+                            stop immediately via the kill signal (no opportunity to
+                            shut down). This is a beta field and requires enabling
+                            ProbeTerminationGracePeriod feature gate. Minimum value
+                            is 1. spec.terminationGracePeriodSeconds is used if unset.
+                          format: int64
+                          type: integer
                         timeoutSeconds:
                           description: 'Number of seconds after which the probe times
                             out. Defaults to 1 second. Minimum value is 1. More info:
@@ -1826,6 +1994,7 @@ openAPIV3Schema:
                               be referred to by services.
                             type: string
                           protocol:
+                            default: TCP
                             description: Protocol for port. Must be UDP, TCP, or SCTP.
                               Defaults to "TCP".
                             type: string
@@ -1835,9 +2004,7 @@ openAPIV3Schema:
                       type: array
                       x-kubernetes-list-map-keys:
                       - containerPort
-                      {{- if semverCompare "< 1.18-0" .Capabilities.KubeVersion.GitVersion }}
                       - protocol
-                      {{- end }}
                       x-kubernetes-list-type: map
                     readinessProbe:
                       description: 'Periodic probe of container service readiness.
@@ -1845,8 +2012,7 @@ openAPIV3Schema:
                         fails. Cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
                       properties:
                         exec:
-                          description: One and only one of the following should be
-                            specified. Exec specifies the action to take.
+                          description: Exec specifies the action to take.
                           properties:
                             command:
                               description: Command is the command line to execute
@@ -1867,6 +2033,25 @@ openAPIV3Schema:
                             to 3. Minimum value is 1.
                           format: int32
                           type: integer
+                        grpc:
+                          description: GRPC specifies an action involving a GRPC port.
+                            This is an alpha field and requires enabling GRPCContainerProbe
+                            feature gate.
+                          properties:
+                            port:
+                              description: Port number of the gRPC service. Number
+                                must be in the range 1 to 65535.
+                              format: int32
+                              type: integer
+                            service:
+                              description: "Service is the name of the service to
+                                place in the gRPC HealthCheckRequest (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+                                \n If this is not specified, the default behavior
+                                is defined by gRPC."
+                              type: string
+                          required:
+                          - port
+                          type: object
                         httpGet:
                           description: HTTPGet specifies the http request to perform.
                           properties:
@@ -1930,9 +2115,8 @@ openAPIV3Schema:
                           format: int32
                           type: integer
                         tcpSocket:
-                          description: 'TCPSocket specifies an action involving a
-                            TCP port. TCP hooks not yet supported TODO: implement
-                            a realistic TCP lifecycle hook'
+                          description: TCPSocket specifies an action involving a TCP
+                            port.
                           properties:
                             host:
                               description: 'Optional: Host name to connect to, defaults
@@ -1949,6 +2133,23 @@ openAPIV3Schema:
                           required:
                           - port
                           type: object
+                        terminationGracePeriodSeconds:
+                          description: Optional duration in seconds the pod needs
+                            to terminate gracefully upon probe failure. The grace
+                            period is the duration in seconds after the processes
+                            running in the pod are sent a termination signal and the
+                            time when the processes are forcibly halted with a kill
+                            signal. Set this value longer than the expected cleanup
+                            time for your process. If this value is nil, the pod's
+                            terminationGracePeriodSeconds will be used. Otherwise,
+                            this value overrides the value provided by the pod spec.
+                            Value must be non-negative integer. The value zero indicates
+                            stop immediately via the kill signal (no opportunity to
+                            shut down). This is a beta field and requires enabling
+                            ProbeTerminationGracePeriod feature gate. Minimum value
+                            is 1. spec.terminationGracePeriodSeconds is used if unset.
+                          format: int64
+                          type: integer
                         timeoutSeconds:
                           description: 'Number of seconds after which the probe times
                             out. Defaults to 1 second. Minimum value is 1. More info:
@@ -1958,7 +2159,7 @@ openAPIV3Schema:
                       type: object
                     resources:
                       description: 'Compute Resources required by this container.
-                        Cannot be updated. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                        Cannot be updated. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                       properties:
                         limits:
                           additionalProperties:
@@ -1968,7 +2169,7 @@ openAPIV3Schema:
                             pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                             x-kubernetes-int-or-string: true
                           description: 'Limits describes the maximum amount of compute
-                            resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                            resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                           type: object
                         requests:
                           additionalProperties:
@@ -1981,13 +2182,14 @@ openAPIV3Schema:
                             resources required. If Requests is omitted for a container,
                             it defaults to Limits if that is explicitly specified,
                             otherwise to an implementation-defined value. More info:
-                            https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                            https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                           type: object
                       type: object
                     securityContext:
-                      description: 'Security options the pod should run with. More
-                        info: https://kubernetes.io/docs/concepts/policy/security-context/
-                        More info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/'
+                      description: 'SecurityContext defines the security options the
+                        container should be run with. If set, the fields of SecurityContext
+                        override the equivalent fields of PodSecurityContext. More
+                        info: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/'
                       properties:
                         allowPrivilegeEscalation:
                           description: 'AllowPrivilegeEscalation controls whether
@@ -1995,12 +2197,14 @@ openAPIV3Schema:
                             This bool directly controls if the no_new_privs flag will
                             be set on the container process. AllowPrivilegeEscalation
                             is true always when the container is: 1) run as Privileged
-                            2) has CAP_SYS_ADMIN'
+                            2) has CAP_SYS_ADMIN Note that this field cannot be set
+                            when spec.os.name is windows.'
                           type: boolean
                         capabilities:
                           description: The capabilities to add/drop when running containers.
                             Defaults to the default set of capabilities granted by
-                            the container runtime.
+                            the container runtime. Note that this field cannot be
+                            set when spec.os.name is windows.
                           properties:
                             add:
                               description: Added capabilities
@@ -2020,25 +2224,29 @@ openAPIV3Schema:
                         privileged:
                           description: Run container in privileged mode. Processes
                             in privileged containers are essentially equivalent to
-                            root on the host. Defaults to false.
+                            root on the host. Defaults to false. Note that this field
+                            cannot be set when spec.os.name is windows.
                           type: boolean
                         procMount:
                           description: procMount denotes the type of proc mount to
                             use for the containers. The default is DefaultProcMount
                             which uses the container runtime defaults for readonly
                             paths and masked paths. This requires the ProcMountType
-                            feature flag to be enabled.
+                            feature flag to be enabled. Note that this field cannot
+                            be set when spec.os.name is windows.
                           type: string
                         readOnlyRootFilesystem:
                           description: Whether this container has a read-only root
-                            filesystem. Default is false.
+                            filesystem. Default is false. Note that this field cannot
+                            be set when spec.os.name is windows.
                           type: boolean
                         runAsGroup:
                           description: The GID to run the entrypoint of the container
                             process. Uses runtime default if unset. May also be set
                             in PodSecurityContext.  If set in both SecurityContext
                             and PodSecurityContext, the value specified in SecurityContext
-                            takes precedence.
+                            takes precedence. Note that this field cannot be set when
+                            spec.os.name is windows.
                           format: int64
                           type: integer
                         runAsNonRoot:
@@ -2056,7 +2264,8 @@ openAPIV3Schema:
                             process. Defaults to user specified in image metadata
                             if unspecified. May also be set in PodSecurityContext.  If
                             set in both SecurityContext and PodSecurityContext, the
-                            value specified in SecurityContext takes precedence.
+                            value specified in SecurityContext takes precedence. Note
+                            that this field cannot be set when spec.os.name is windows.
                           format: int64
                           type: integer
                         seLinuxOptions:
@@ -2065,7 +2274,8 @@ openAPIV3Schema:
                             random SELinux context for each container.  May also be
                             set in PodSecurityContext.  If set in both SecurityContext
                             and PodSecurityContext, the value specified in SecurityContext
-                            takes precedence.
+                            takes precedence. Note that this field cannot be set when
+                            spec.os.name is windows.
                           properties:
                             level:
                               description: Level is SELinux level label that applies
@@ -2088,6 +2298,8 @@ openAPIV3Schema:
                           description: The seccomp options to use by this container.
                             If seccomp options are provided at both the pod & container
                             level, the container options override the pod options.
+                            Note that this field cannot be set when spec.os.name is
+                            windows.
                           properties:
                             localhostProfile:
                               description: localhostProfile indicates a profile defined
@@ -2113,6 +2325,8 @@ openAPIV3Schema:
                             containers. If unspecified, the options from the PodSecurityContext
                             will be used. If set in both SecurityContext and PodSecurityContext,
                             the value specified in SecurityContext takes precedence.
+                            Note that this field cannot be set when spec.os.name is
+                            linux.
                           properties:
                             gmsaCredentialSpec:
                               description: GMSACredentialSpec is where the GMSA admission
@@ -2124,6 +2338,19 @@ openAPIV3Schema:
                               description: GMSACredentialSpecName is the name of the
                                 GMSA credential spec to use.
                               type: string
+                            hostProcess:
+                              description: HostProcess determines if a container should
+                                be run as a 'Host Process' container. This field is
+                                alpha-level and will only be honored by components
+                                that enable the WindowsHostProcessContainers feature
+                                flag. Setting this field without the feature flag
+                                will result in errors when validating the Pod. All
+                                of a Pod's containers must have the same effective
+                                HostProcess value (it is not allowed to have a mix
+                                of HostProcess containers and non-HostProcess containers).  In
+                                addition, if HostProcess is true then HostNetwork
+                                must also be set to true.
+                              type: boolean
                             runAsUserName:
                               description: The UserName in Windows to run the entrypoint
                                 of the container process. Defaults to the user specified
@@ -2142,12 +2369,10 @@ openAPIV3Schema:
                         can be used to provide different probe parameters at the beginning
                         of a Pod''s lifecycle, when it might take a long time to load
                         data or warm a cache, than during steady-state operation.
-                        This cannot be updated. This is a beta feature enabled by
-                        the StartupProbe feature flag. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
+                        This cannot be updated. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes'
                       properties:
                         exec:
-                          description: One and only one of the following should be
-                            specified. Exec specifies the action to take.
+                          description: Exec specifies the action to take.
                           properties:
                             command:
                               description: Command is the command line to execute
@@ -2168,6 +2393,25 @@ openAPIV3Schema:
                             to 3. Minimum value is 1.
                           format: int32
                           type: integer
+                        grpc:
+                          description: GRPC specifies an action involving a GRPC port.
+                            This is an alpha field and requires enabling GRPCContainerProbe
+                            feature gate.
+                          properties:
+                            port:
+                              description: Port number of the gRPC service. Number
+                                must be in the range 1 to 65535.
+                              format: int32
+                              type: integer
+                            service:
+                              description: "Service is the name of the service to
+                                place in the gRPC HealthCheckRequest (see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+                                \n If this is not specified, the default behavior
+                                is defined by gRPC."
+                              type: string
+                          required:
+                          - port
+                          type: object
                         httpGet:
                           description: HTTPGet specifies the http request to perform.
                           properties:
@@ -2231,9 +2475,8 @@ openAPIV3Schema:
                           format: int32
                           type: integer
                         tcpSocket:
-                          description: 'TCPSocket specifies an action involving a
-                            TCP port. TCP hooks not yet supported TODO: implement
-                            a realistic TCP lifecycle hook'
+                          description: TCPSocket specifies an action involving a TCP
+                            port.
                           properties:
                             host:
                               description: 'Optional: Host name to connect to, defaults
@@ -2250,6 +2493,23 @@ openAPIV3Schema:
                           required:
                           - port
                           type: object
+                        terminationGracePeriodSeconds:
+                          description: Optional duration in seconds the pod needs
+                            to terminate gracefully upon probe failure. The grace
+                            period is the duration in seconds after the processes
+                            running in the pod are sent a termination signal and the
+                            time when the processes are forcibly halted with a kill
+                            signal. Set this value longer than the expected cleanup
+                            time for your process. If this value is nil, the pod's
+                            terminationGracePeriodSeconds will be used. Otherwise,
+                            this value overrides the value provided by the pod spec.
+                            Value must be non-negative integer. The value zero indicates
+                            stop immediately via the kill signal (no opportunity to
+                            shut down). This is a beta field and requires enabling
+                            ProbeTerminationGracePeriod feature gate. Minimum value
+                            is 1. spec.terminationGracePeriodSeconds is used if unset.
+                          format: int64
+                          type: integer
                         timeoutSeconds:
                           description: 'Number of seconds after which the probe times
                             out. Defaults to 1 second. Minimum value is 1. More info:
@@ -2377,6 +2637,11 @@ openAPIV3Schema:
                 description: Labels specifies the labels to attach to pods the operator
                   creates for the zookeeper cluster.
                 type: object
+              maxUnavailableReplicas:
+                description: MaxUnavailableReplicas defines the MaxUnavailable Replicas
+                  in pdb. Default is 1.
+                format: int32
+                type: integer
               persistence:
                 description: Persistence is the configuration for zookeeper persistent
                   layer. PersistentVolumeClaimSpec and VolumeReclaimPolicy can be
@@ -2410,18 +2675,51 @@ openAPIV3Schema:
                         type: array
                       dataSource:
                         description: 'This field can be used to specify either: *
-                          An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot
-                          - Beta) * An existing PVC (PersistentVolumeClaim) * An existing
-                          custom resource/object that implements data population (Alpha)
-                          In order to use VolumeSnapshot object types, the appropriate
-                          feature gate must be enabled (VolumeSnapshotDataSource or
-                          AnyVolumeDataSource) If the provisioner or an external controller
-                          can support the specified data source, it will create a
-                          new volume based on the contents of the specified data source.
-                          If the specified data source is not supported, the volume
-                          will not be created and the failure will be reported as
-                          an event. In the future, we plan to support more data source
-                          types and the behavior of the provisioner may change.'
+                          An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot)
+                          * An existing PVC (PersistentVolumeClaim) If the provisioner
+                          or an external controller can support the specified data
+                          source, it will create a new volume based on the contents
+                          of the specified data source. If the AnyVolumeDataSource
+                          feature gate is enabled, this field will always have the
+                          same contents as the DataSourceRef field.'
+                        properties:
+                          apiGroup:
+                            description: APIGroup is the group for the resource being
+                              referenced. If APIGroup is not specified, the specified
+                              Kind must be in the core API group. For any other third-party
+                              types, APIGroup is required.
+                            type: string
+                          kind:
+                            description: Kind is the type of resource being referenced
+                            type: string
+                          name:
+                            description: Name is the name of resource being referenced
+                            type: string
+                        required:
+                        - kind
+                        - name
+                        type: object
+                      dataSourceRef:
+                        description: 'Specifies the object from which to populate
+                          the volume with data, if a non-empty volume is desired.
+                          This may be any local object from a non-empty API group
+                          (non core object) or a PersistentVolumeClaim object. When
+                          this field is specified, volume binding will only succeed
+                          if the type of the specified object matches some installed
+                          volume populator or dynamic provisioner. This field will
+                          replace the functionality of the DataSource field and as
+                          such if both fields are non-empty, they must have the same
+                          value. For backwards compatibility, both fields (DataSource
+                          and DataSourceRef) will be set to the same value automatically
+                          if one of them is empty and the other is non-empty. There
+                          are two important differences between DataSource and DataSourceRef:
+                          * While DataSource only allows two specific types of objects,
+                          DataSourceRef   allows any non-core object, as well as PersistentVolumeClaim
+                          objects. * While DataSource ignores disallowed values (dropping
+                          them), DataSourceRef   preserves all values, and generates
+                          an error if a disallowed value is   specified. (Alpha) Using
+                          this field requires the AnyVolumeDataSource feature gate
+                          to be enabled.'
                         properties:
                           apiGroup:
                             description: APIGroup is the group for the resource being
@@ -2441,7 +2739,11 @@ openAPIV3Schema:
                         type: object
                       resources:
                         description: 'Resources represents the minimum resources the
-                          volume should have. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources'
+                          volume should have. If RecoverVolumeExpansionFailure feature
+                          is enabled users are allowed to specify resource requirements
+                          that are lower than previous value but must still be higher
+                          than capacity recorded in the status field of the claim.
+                          More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources'
                         properties:
                           limits:
                             additionalProperties:
@@ -2451,7 +2753,7 @@ openAPIV3Schema:
                               pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                               x-kubernetes-int-or-string: true
                             description: 'Limits describes the maximum amount of compute
-                              resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                              resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                             type: object
                           requests:
                             additionalProperties:
@@ -2464,7 +2766,7 @@ openAPIV3Schema:
                               compute resources required. If Requests is omitted for
                               a container, it defaults to Limits if that is explicitly
                               specified, otherwise to an implementation-defined value.
-                              More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                              More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                             type: object
                         type: object
                       selector:
@@ -2826,10 +3128,73 @@ openAPIV3Schema:
                                             only "value". The requirements are ANDed.
                                           type: object
                                       type: object
+                                    namespaceSelector:
+                                      description: A label query over the set of namespaces
+                                        that the term applies to. The term is applied
+                                        to the union of the namespaces selected by
+                                        this field and the ones listed in the namespaces
+                                        field. null selector and null or empty namespaces
+                                        list means "this pod's namespace". An empty
+                                        selector ({}) matches all namespaces. This
+                                        field is beta-level and is only honored when
+                                        PodAffinityNamespaceSelector feature is enabled.
+                                      properties:
+                                        matchExpressions:
+                                          description: matchExpressions is a list
+                                            of label selector requirements. The requirements
+                                            are ANDed.
+                                          items:
+                                            description: A label selector requirement
+                                              is a selector that contains values,
+                                              a key, and an operator that relates
+                                              the key and values.
+                                            properties:
+                                              key:
+                                                description: key is the label key
+                                                  that the selector applies to.
+                                                type: string
+                                              operator:
+                                                description: operator represents a
+                                                  key's relationship to a set of values.
+                                                  Valid operators are In, NotIn, Exists
+                                                  and DoesNotExist.
+                                                type: string
+                                              values:
+                                                description: values is an array of
+                                                  string values. If the operator is
+                                                  In or NotIn, the values array must
+                                                  be non-empty. If the operator is
+                                                  Exists or DoesNotExist, the values
+                                                  array must be empty. This array
+                                                  is replaced during a strategic merge
+                                                  patch.
+                                                items:
+                                                  type: string
+                                                type: array
+                                            required:
+                                            - key
+                                            - operator
+                                            type: object
+                                          type: array
+                                        matchLabels:
+                                          additionalProperties:
+                                            type: string
+                                          description: matchLabels is a map of {key,value}
+                                            pairs. A single {key,value} in the matchLabels
+                                            map is equivalent to an element of matchExpressions,
+                                            whose key field is "key", the operator
+                                            is "In", and the values array contains
+                                            only "value". The requirements are ANDed.
+                                          type: object
+                                      type: object
                                     namespaces:
-                                      description: namespaces specifies which namespaces
-                                        the labelSelector applies to (matches against);
-                                        null or empty list means "this pod's namespace"
+                                      description: namespaces specifies a static list
+                                        of namespace names that the term applies to.
+                                        The term is applied to the union of the namespaces
+                                        listed in this field and the ones selected
+                                        by namespaceSelector. null or empty namespaces
+                                        list and null namespaceSelector means "this
+                                        pod's namespace"
                                       items:
                                         type: string
                                       type: array
@@ -2926,10 +3291,71 @@ openAPIV3Schema:
                                         The requirements are ANDed.
                                       type: object
                                   type: object
+                                namespaceSelector:
+                                  description: A label query over the set of namespaces
+                                    that the term applies to. The term is applied
+                                    to the union of the namespaces selected by this
+                                    field and the ones listed in the namespaces field.
+                                    null selector and null or empty namespaces list
+                                    means "this pod's namespace". An empty selector
+                                    ({}) matches all namespaces. This field is beta-level
+                                    and is only honored when PodAffinityNamespaceSelector
+                                    feature is enabled.
+                                  properties:
+                                    matchExpressions:
+                                      description: matchExpressions is a list of label
+                                        selector requirements. The requirements are
+                                        ANDed.
+                                      items:
+                                        description: A label selector requirement
+                                          is a selector that contains values, a key,
+                                          and an operator that relates the key and
+                                          values.
+                                        properties:
+                                          key:
+                                            description: key is the label key that
+                                              the selector applies to.
+                                            type: string
+                                          operator:
+                                            description: operator represents a key's
+                                              relationship to a set of values. Valid
+                                              operators are In, NotIn, Exists and
+                                              DoesNotExist.
+                                            type: string
+                                          values:
+                                            description: values is an array of string
+                                              values. If the operator is In or NotIn,
+                                              the values array must be non-empty.
+                                              If the operator is Exists or DoesNotExist,
+                                              the values array must be empty. This
+                                              array is replaced during a strategic
+                                              merge patch.
+                                            items:
+                                              type: string
+                                            type: array
+                                        required:
+                                        - key
+                                        - operator
+                                        type: object
+                                      type: array
+                                    matchLabels:
+                                      additionalProperties:
+                                        type: string
+                                      description: matchLabels is a map of {key,value}
+                                        pairs. A single {key,value} in the matchLabels
+                                        map is equivalent to an element of matchExpressions,
+                                        whose key field is "key", the operator is
+                                        "In", and the values array contains only "value".
+                                        The requirements are ANDed.
+                                      type: object
+                                  type: object
                                 namespaces:
-                                  description: namespaces specifies which namespaces
-                                    the labelSelector applies to (matches against);
-                                    null or empty list means "this pod's namespace"
+                                  description: namespaces specifies a static list
+                                    of namespace names that the term applies to. The
+                                    term is applied to the union of the namespaces
+                                    listed in this field and the ones selected by
+                                    namespaceSelector. null or empty namespaces list
+                                    and null namespaceSelector means "this pod's namespace"
                                   items:
                                     type: string
                                   type: array
@@ -3026,10 +3452,73 @@ openAPIV3Schema:
                                             only "value". The requirements are ANDed.
                                           type: object
                                       type: object
+                                    namespaceSelector:
+                                      description: A label query over the set of namespaces
+                                        that the term applies to. The term is applied
+                                        to the union of the namespaces selected by
+                                        this field and the ones listed in the namespaces
+                                        field. null selector and null or empty namespaces
+                                        list means "this pod's namespace". An empty
+                                        selector ({}) matches all namespaces. This
+                                        field is beta-level and is only honored when
+                                        PodAffinityNamespaceSelector feature is enabled.
+                                      properties:
+                                        matchExpressions:
+                                          description: matchExpressions is a list
+                                            of label selector requirements. The requirements
+                                            are ANDed.
+                                          items:
+                                            description: A label selector requirement
+                                              is a selector that contains values,
+                                              a key, and an operator that relates
+                                              the key and values.
+                                            properties:
+                                              key:
+                                                description: key is the label key
+                                                  that the selector applies to.
+                                                type: string
+                                              operator:
+                                                description: operator represents a
+                                                  key's relationship to a set of values.
+                                                  Valid operators are In, NotIn, Exists
+                                                  and DoesNotExist.
+                                                type: string
+                                              values:
+                                                description: values is an array of
+                                                  string values. If the operator is
+                                                  In or NotIn, the values array must
+                                                  be non-empty. If the operator is
+                                                  Exists or DoesNotExist, the values
+                                                  array must be empty. This array
+                                                  is replaced during a strategic merge
+                                                  patch.
+                                                items:
+                                                  type: string
+                                                type: array
+                                            required:
+                                            - key
+                                            - operator
+                                            type: object
+                                          type: array
+                                        matchLabels:
+                                          additionalProperties:
+                                            type: string
+                                          description: matchLabels is a map of {key,value}
+                                            pairs. A single {key,value} in the matchLabels
+                                            map is equivalent to an element of matchExpressions,
+                                            whose key field is "key", the operator
+                                            is "In", and the values array contains
+                                            only "value". The requirements are ANDed.
+                                          type: object
+                                      type: object
                                     namespaces:
-                                      description: namespaces specifies which namespaces
-                                        the labelSelector applies to (matches against);
-                                        null or empty list means "this pod's namespace"
+                                      description: namespaces specifies a static list
+                                        of namespace names that the term applies to.
+                                        The term is applied to the union of the namespaces
+                                        listed in this field and the ones selected
+                                        by namespaceSelector. null or empty namespaces
+                                        list and null namespaceSelector means "this
+                                        pod's namespace"
                                       items:
                                         type: string
                                       type: array
@@ -3126,10 +3615,71 @@ openAPIV3Schema:
                                         The requirements are ANDed.
                                       type: object
                                   type: object
+                                namespaceSelector:
+                                  description: A label query over the set of namespaces
+                                    that the term applies to. The term is applied
+                                    to the union of the namespaces selected by this
+                                    field and the ones listed in the namespaces field.
+                                    null selector and null or empty namespaces list
+                                    means "this pod's namespace". An empty selector
+                                    ({}) matches all namespaces. This field is beta-level
+                                    and is only honored when PodAffinityNamespaceSelector
+                                    feature is enabled.
+                                  properties:
+                                    matchExpressions:
+                                      description: matchExpressions is a list of label
+                                        selector requirements. The requirements are
+                                        ANDed.
+                                      items:
+                                        description: A label selector requirement
+                                          is a selector that contains values, a key,
+                                          and an operator that relates the key and
+                                          values.
+                                        properties:
+                                          key:
+                                            description: key is the label key that
+                                              the selector applies to.
+                                            type: string
+                                          operator:
+                                            description: operator represents a key's
+                                              relationship to a set of values. Valid
+                                              operators are In, NotIn, Exists and
+                                              DoesNotExist.
+                                            type: string
+                                          values:
+                                            description: values is an array of string
+                                              values. If the operator is In or NotIn,
+                                              the values array must be non-empty.
+                                              If the operator is Exists or DoesNotExist,
+                                              the values array must be empty. This
+                                              array is replaced during a strategic
+                                              merge patch.
+                                            items:
+                                              type: string
+                                            type: array
+                                        required:
+                                        - key
+                                        - operator
+                                        type: object
+                                      type: array
+                                    matchLabels:
+                                      additionalProperties:
+                                        type: string
+                                      description: matchLabels is a map of {key,value}
+                                        pairs. A single {key,value} in the matchLabels
+                                        map is equivalent to an element of matchExpressions,
+                                        whose key field is "key", the operator is
+                                        "In", and the values array contains only "value".
+                                        The requirements are ANDed.
+                                      type: object
+                                  type: object
                                 namespaces:
-                                  description: namespaces specifies which namespaces
-                                    the labelSelector applies to (matches against);
-                                    null or empty list means "this pod's namespace"
+                                  description: namespaces specifies a static list
+                                    of namespace names that the term applies to. The
+                                    term is applied to the union of the namespaces
+                                    listed in this field and the ones selected by
+                                    namespaceSelector. null or empty namespaces list
+                                    and null namespaceSelector means "this pod's namespace"
                                   items:
                                     type: string
                                   type: array
@@ -3167,13 +3717,14 @@ openAPIV3Schema:
                           type: string
                         value:
                           description: 'Variable references $(VAR_NAME) are expanded
-                            using the previous defined environment variables in the
-                            container and any service environment variables. If a
-                            variable cannot be resolved, the reference in the input
-                            string will be unchanged. The $(VAR_NAME) syntax can be
-                            escaped with a double $$, ie: $$(VAR_NAME). Escaped references
-                            will never be expanded, regardless of whether the variable
-                            exists or not. Defaults to "".'
+                            using the previously defined environment variables in
+                            the container and any service environment variables. If
+                            a variable cannot be resolved, the reference in the input
+                            string will be unchanged. Double $$ are reduced to a single
+                            $, which allows for escaping the $(VAR_NAME) syntax: i.e.
+                            "$$(VAR_NAME)" will produce the string literal "$(VAR_NAME)".
+                            Escaped references will never be expanded, regardless
+                            of whether the variable exists or not. Defaults to "".'
                           type: string
                         valueFrom:
                           description: Source for the environment variable's value.
@@ -3302,7 +3853,7 @@ openAPIV3Schema:
                           pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                           x-kubernetes-int-or-string: true
                         description: 'Limits describes the maximum amount of compute
-                          resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                          resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                         type: object
                       requests:
                         additionalProperties:
@@ -3314,7 +3865,7 @@ openAPIV3Schema:
                         description: 'Requests describes the minimum amount of compute
                           resources required. If Requests is omitted for a container,
                           it defaults to Limits if that is explicitly specified, otherwise
-                          to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                          to an implementation-defined value. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                         type: object
                     type: object
                   securityContext:
@@ -3329,7 +3880,8 @@ openAPIV3Schema:
                           bit is set (new files created in the volume will be owned
                           by FSGroup) 3. The permission bits are OR'd with rw-rw----
                           \n If unset, the Kubelet will not modify the ownership and
-                          permissions of any volume."
+                          permissions of any volume. Note that this field cannot be
+                          set when spec.os.name is windows."
                         format: int64
                         type: integer
                       fsGroupChangePolicy:
@@ -3339,14 +3891,16 @@ openAPIV3Schema:
                           support fsGroup based ownership(and permissions). It will
                           have no effect on ephemeral volume types such as: secret,
                           configmaps and emptydir. Valid values are "OnRootMismatch"
-                          and "Always". If not specified defaults to "Always".'
+                          and "Always". If not specified, "Always" is used. Note that
+                          this field cannot be set when spec.os.name is windows.'
                         type: string
                       runAsGroup:
                         description: The GID to run the entrypoint of the container
                           process. Uses runtime default if unset. May also be set
                           in SecurityContext.  If set in both SecurityContext and
                           PodSecurityContext, the value specified in SecurityContext
-                          takes precedence for that container.
+                          takes precedence for that container. Note that this field
+                          cannot be set when spec.os.name is windows.
                         format: int64
                         type: integer
                       runAsNonRoot:
@@ -3364,6 +3918,8 @@ openAPIV3Schema:
                           unspecified. May also be set in SecurityContext.  If set
                           in both SecurityContext and PodSecurityContext, the value
                           specified in SecurityContext takes precedence for that container.
+                          Note that this field cannot be set when spec.os.name is
+                          windows.
                         format: int64
                         type: integer
                       seLinuxOptions:
@@ -3372,7 +3928,8 @@ openAPIV3Schema:
                           SELinux context for each container.  May also be set in
                           SecurityContext.  If set in both SecurityContext and PodSecurityContext,
                           the value specified in SecurityContext takes precedence
-                          for that container.
+                          for that container. Note that this field cannot be set when
+                          spec.os.name is windows.
                         properties:
                           level:
                             description: Level is SELinux level label that applies
@@ -3393,7 +3950,8 @@ openAPIV3Schema:
                         type: object
                       seccompProfile:
                         description: The seccomp options to use by the containers
-                          in this pod.
+                          in this pod. Note that this field cannot be set when spec.os.name
+                          is windows.
                         properties:
                           localhostProfile:
                             description: localhostProfile indicates a profile defined
@@ -3416,6 +3974,8 @@ openAPIV3Schema:
                         description: A list of groups applied to the first process
                           run in each container, in addition to the container's primary
                           GID.  If unspecified, no groups will be added to any container.
+                          Note that this field cannot be set when spec.os.name is
+                          windows.
                         items:
                           format: int64
                           type: integer
@@ -3423,7 +3983,8 @@ openAPIV3Schema:
                       sysctls:
                         description: Sysctls hold a list of namespaced sysctls used
                           for the pod. Pods with unsupported sysctls (by the container
-                          runtime) might fail to launch.
+                          runtime) might fail to launch. Note that this field cannot
+                          be set when spec.os.name is windows.
                         items:
                           description: Sysctl defines a kernel parameter to be set
                           properties:
@@ -3443,7 +4004,8 @@ openAPIV3Schema:
                           containers. If unspecified, the options within a container's
                           SecurityContext will be used. If set in both SecurityContext
                           and PodSecurityContext, the value specified in SecurityContext
-                          takes precedence.
+                          takes precedence. Note that this field cannot be set when
+                          spec.os.name is linux.
                         properties:
                           gmsaCredentialSpec:
                             description: GMSACredentialSpec is where the GMSA admission
@@ -3455,6 +4017,18 @@ openAPIV3Schema:
                             description: GMSACredentialSpecName is the name of the
                               GMSA credential spec to use.
                             type: string
+                          hostProcess:
+                            description: HostProcess determines if a container should
+                              be run as a 'Host Process' container. This field is
+                              alpha-level and will only be honored by components that
+                              enable the WindowsHostProcessContainers feature flag.
+                              Setting this field without the feature flag will result
+                              in errors when validating the Pod. All of a Pod's containers
+                              must have the same effective HostProcess value (it is
+                              not allowed to have a mix of HostProcess containers
+                              and non-HostProcess containers).  In addition, if HostProcess
+                              is true then HostNetwork must also be set to true.
+                            type: boolean
                           runAsUserName:
                             description: The UserName in Windows to run the entrypoint
                               of the container process. Defaults to the user specified
@@ -3544,6 +4118,7 @@ openAPIV3Schema:
                         services.
                       type: string
                     protocol:
+                      default: TCP
                       description: Protocol for port. Must be UDP, TCP, or SCTP. Defaults
                         to "TCP".
                       type: string
@@ -3616,7 +4191,9 @@ openAPIV3Schema:
                   StorageType is Persistence storage
                 type: string
               triggerRollingRestart:
-                description: if set to true, triggers a cluster restart. this value will be auto-reverted to false by the operator once the restart is triggered.
+                description: TriggerRollingRestart if set to true will instruct operator
+                  to restart all the pods in the zookeeper cluster, after which this
+                  value will be set to false
                 type: boolean
               volumeMounts:
                 description: VolumeMounts defines to support customized volumeMounts
@@ -4040,14 +4617,14 @@ openAPIV3Schema:
                       type: object
                     ephemeral:
                       description: "Ephemeral represents a volume that is handled
-                        by a cluster storage driver (Alpha feature). The volume's
-                        lifecycle is tied to the pod that defines it - it will be
-                        created before the pod starts, and deleted when the pod is
-                        removed. \n Use this if: a) the volume is only needed while
-                        the pod runs, b) features of normal volumes like restoring
-                        from snapshot or capacity    tracking are needed, c) the storage
-                        driver is specified through a storage class, and d) the storage
-                        driver supports dynamic volume provisioning through    a PersistentVolumeClaim
+                        by a cluster storage driver. The volume's lifecycle is tied
+                        to the pod that defines it - it will be created before the
+                        pod starts, and deleted when the pod is removed. \n Use this
+                        if: a) the volume is only needed while the pod runs, b) features
+                        of normal volumes like restoring from snapshot or capacity
+                        \   tracking are needed, c) the storage driver is specified
+                        through a storage class, and d) the storage driver supports
+                        dynamic volume provisioning through    a PersistentVolumeClaim
                         (see EphemeralVolumeSource for more    information on the
                         connection between this volume type    and PersistentVolumeClaim).
                         \n Use PersistentVolumeClaim or one of the vendor-specific
@@ -4058,10 +4635,6 @@ openAPIV3Schema:
                         pod can use both types of ephemeral volumes and persistent
                         volumes at the same time."
                       properties:
-                        readOnly:
-                          description: Specifies a read-only configuration for the
-                            volume. Defaults to false (read/write).
-                          type: boolean
                         volumeClaimTemplate:
                           description: "Will be used to create a stand-alone PVC to
                             provision the volume. The pod in which this EphemeralVolumeSource
@@ -4102,20 +4675,59 @@ openAPIV3Schema:
                                   type: array
                                 dataSource:
                                   description: 'This field can be used to specify
-                                    either: * An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot
-                                    - Beta) * An existing PVC (PersistentVolumeClaim)
-                                    * An existing custom resource/object that implements
-                                    data population (Alpha) In order to use VolumeSnapshot
-                                    object types, the appropriate feature gate must
-                                    be enabled (VolumeSnapshotDataSource or AnyVolumeDataSource)
-                                    If the provisioner or an external controller can
-                                    support the specified data source, it will create
-                                    a new volume based on the contents of the specified
-                                    data source. If the specified data source is not
-                                    supported, the volume will not be created and
-                                    the failure will be reported as an event. In the
-                                    future, we plan to support more data source types
-                                    and the behavior of the provisioner may change.'
+                                    either: * An existing VolumeSnapshot object (snapshot.storage.k8s.io/VolumeSnapshot)
+                                    * An existing PVC (PersistentVolumeClaim) If the
+                                    provisioner or an external controller can support
+                                    the specified data source, it will create a new
+                                    volume based on the contents of the specified
+                                    data source. If the AnyVolumeDataSource feature
+                                    gate is enabled, this field will always have the
+                                    same contents as the DataSourceRef field.'
+                                  properties:
+                                    apiGroup:
+                                      description: APIGroup is the group for the resource
+                                        being referenced. If APIGroup is not specified,
+                                        the specified Kind must be in the core API
+                                        group. For any other third-party types, APIGroup
+                                        is required.
+                                      type: string
+                                    kind:
+                                      description: Kind is the type of resource being
+                                        referenced
+                                      type: string
+                                    name:
+                                      description: Name is the name of resource being
+                                        referenced
+                                      type: string
+                                  required:
+                                  - kind
+                                  - name
+                                  type: object
+                                dataSourceRef:
+                                  description: 'Specifies the object from which to
+                                    populate the volume with data, if a non-empty
+                                    volume is desired. This may be any local object
+                                    from a non-empty API group (non core object) or
+                                    a PersistentVolumeClaim object. When this field
+                                    is specified, volume binding will only succeed
+                                    if the type of the specified object matches some
+                                    installed volume populator or dynamic provisioner.
+                                    This field will replace the functionality of the
+                                    DataSource field and as such if both fields are
+                                    non-empty, they must have the same value. For
+                                    backwards compatibility, both fields (DataSource
+                                    and DataSourceRef) will be set to the same value
+                                    automatically if one of them is empty and the
+                                    other is non-empty. There are two important differences
+                                    between DataSource and DataSourceRef: * While
+                                    DataSource only allows two specific types of objects,
+                                    DataSourceRef   allows any non-core object, as
+                                    well as PersistentVolumeClaim objects. * While
+                                    DataSource ignores disallowed values (dropping
+                                    them), DataSourceRef   preserves all values, and
+                                    generates an error if a disallowed value is   specified.
+                                    (Alpha) Using this field requires the AnyVolumeDataSource
+                                    feature gate to be enabled.'
                                   properties:
                                     apiGroup:
                                       description: APIGroup is the group for the resource
@@ -4138,7 +4750,11 @@ openAPIV3Schema:
                                   type: object
                                 resources:
                                   description: 'Resources represents the minimum resources
-                                    the volume should have. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources'
+                                    the volume should have. If RecoverVolumeExpansionFailure
+                                    feature is enabled users are allowed to specify
+                                    resource requirements that are lower than previous
+                                    value but must still be higher than capacity recorded
+                                    in the status field of the claim. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources'
                                   properties:
                                     limits:
                                       additionalProperties:
@@ -4148,7 +4764,7 @@ openAPIV3Schema:
                                         pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
                                         x-kubernetes-int-or-string: true
                                       description: 'Limits describes the maximum amount
-                                        of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                                        of compute resources allowed. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                       type: object
                                     requests:
                                       additionalProperties:
@@ -4162,7 +4778,7 @@ openAPIV3Schema:
                                         is omitted for a container, it defaults to
                                         Limits if that is explicitly specified, otherwise
                                         to an implementation-defined value. More info:
-                                        https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/'
+                                        https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/'
                                       type: object
                                   type: object
                                 selector:
@@ -4818,8 +5434,6 @@ openAPIV3Schema:
                                 type: object
                             type: object
                           type: array
-                      required:
-                      - sources
                       type: object
                     quobyte:
                       description: Quobyte represents a Quobyte mount on the host
